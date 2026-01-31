@@ -1,0 +1,2 @@
+[console_scripts]
+equilibrium = Equilibrium.__main__:main
