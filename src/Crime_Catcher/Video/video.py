@@ -1,7 +1,6 @@
 import cv2
 
 
-
 class Camera:
 
     def __init__(self):
@@ -36,3 +35,24 @@ class Camera:
     def cleanup(self):
         self.cap.release()
         cv2.destroyAllWindows()
+
+
+
+class ThreatDetection:
+
+    def __init__(self):
+
+        pass
+
+    def person_down_detection(self):
+
+        pass
+
+    def weapon_detection(self):
+        pass
+
+    def fighting_detection(self):
+
+        pass
+
+    
