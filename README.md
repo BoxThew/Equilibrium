@@ -1,6 +1,6 @@
 # Crime Catcher
 
-**<p align='center'> Transforming passive surveillance into active protection.</p>**
+**Transforming passive surveillance into active protection.**
 
 Crime Catcher is an intelligent video surveillance platform designed to detect crimes, suspicious activities, and life-threatening events in real-time. Moving beyond simple recording, this system understands and analyzes video feeds to identify critical situations such as fights, weapons, fainting, or choking and instantly notifies security personnel.
 
@@ -11,12 +11,15 @@ By combining local real-time analysis with advanced cloud-based verification, Cr
 ## Demo
 
 ![Dashboard Overview](https://placehold.co/600x400?text=Placeholder+[Dashboard-Screenshot])
+<br>
 _*Real-time admin dashboard displaying active feeds and recent alerts.*_
 
 ![Eyepop Detection](https://placehold.co/600x400?text=Placeholder+[Eyepop-Detection]) 
+<br>
 _*Crime Assessment using EyePop.ai*_
 
 ![Alert](https://placehold.co/600x400?text=Placeholder+[Alert-Notification])
+<br>
 _*Detailed incident report with snapshots.*_
 
 ---
@@ -71,3 +74,4 @@ _*Detailed incident report with snapshots.*_
 — Inspired by the increasing incidents of criminal activities throughout the world and the need to turn existing passive security systems into intelligent security guardians. 
 
 ---
+
