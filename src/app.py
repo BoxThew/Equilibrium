@@ -1,60 +1,55 @@
 import cv2
-from flask import Flask, jsonify
+from flask import Flask, Response, jsonify
 from flask_cors import CORS
-from ultralytics import YOLO
-import threading
-import time
-from datetime import datetime
+
+# If you want to use your video detection, uncomment these:
+# from video_integrated import Camera
+# Or if using the original structure:
+# from video import Camera
 
 app = Flask(__name__)
 CORS(app)
 
-# 1. Load your model (pointing to the file in your root)
-model = YOLO("yolov8n.pt")
-
-# 2. Shared list to store detections
-incidents = []
-
-def run_ai_detection():
-    global incidents
-    # Open the webcam (0 is usually the default camera)
-    cap = cv2.VideoCapture(0)
+# Simple version without the Camera class - just streams webcam
+def generate_frames():
+    """Generate frames from webcam for video streaming"""
+    camera = cv2.VideoCapture(0)
     
     while True:
-        success, frame = cap.read()
+        success, frame = camera.read()
         if not success:
             break
-
-        # Run YOLO inference
-        results = model(frame, conf=0.5, verbose=False)
         
-        # Check for specific objects (e.g., "person" is class 0)
-        for r in results:
-            classes = r.boxes.cls.tolist()
-            if 0 in classes:  # If a person is detected
-                new_incident = {
-                    "id": int(time.time()),
-                    "title": "Person Detected",
-                    "time": datetime.now().strftime("%I:%M:%S %p"),
-                    "description": "AI identified an individual in the restricted frame.",
-                    "color": "bg-red-600/40"
-                }
-                
-                # Add to the front of the list and keep only the last 10
-                incidents = [new_incident] + incidents
-                incidents = incidents[:10]
-                
-                # Sleep briefly to avoid flooding the dashboard with the same detection
-                time.sleep(5)
+        # Encode frame as JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+        
+        # Yield frame in multipart format
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+    
+    camera.release()
 
-    cap.release()
 
-# Start the AI in a separate thread so Flask can still handle requests
-threading.Thread(target=run_ai_detection, daemon=True).start()
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route"""
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/api/incidents', methods=['GET'])
-def get_incidents():
-    return jsonify(incidents)
+
+@app.route('/api/status')
+def get_status():
+    """Return current detection status"""
+    # For now, return a dummy status
+    # You can integrate with your detection system later
+    return jsonify({
+        "status": "SECURE",
+        "lastAlert": None
+    })
+
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, use_reloader=False)
+    print("Starting Flask Server on http://127.0.0.1:5001")
+    print("Video feed available at: http://127.0.0.1:5001/video_feed")
+    app.run(debug=True, port=5001, host='0.0.0.0')

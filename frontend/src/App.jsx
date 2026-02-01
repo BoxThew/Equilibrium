@@ -1,26 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Plus, ShieldAlert, MapPin, ArrowRight, Activity, BarChart3 } from 'lucide-react';
-
-// --- SUB-COMPONENT: INCIDENT CARD ---
-const IncidentCard = ({ title, time, description, color }) => (
-  <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-4 hover:shadow-md transition-shadow font-sans">
-    <div className="flex gap-4 items-start">
-      <div className={`w-12 h-12 rounded-xl shrink-0 ${color} flex items-center justify-center`}>
-        <ShieldAlert className="text-white/80" size={20} />
-      </div>
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <h4 className="font-bold text-lg leading-tight">{title}</h4>
-          <Plus size={16} className="text-gray-300" />
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-wider">
-          <MapPin size={10} /> {time} @ Location
-        </div>
-        <p className="text-sm text-gray-600 mt-2 leading-relaxed">{description}</p>
-      </div>
-    </div>
-  </div>
-);
+import { ArrowRight, ShieldAlert } from 'lucide-react';
 
 // --- PAGE 1: HOME PAGE ---
 const HomePage = ({ onStart }) => (
@@ -57,109 +36,142 @@ const HomePage = ({ onStart }) => (
   </div>
 );
 
-// --- PAGE 2: DASHBOARD PAGE ---
-const DashboardPage = () => {
-  const [incidents, setIncidents] = useState([]);
+// --- PAGE 2: CAMERA FEED PAGE ---
+const CameraPage = () => {
   const videoRef = useRef(null);
+  const [status, setStatus] = useState('SECURE');
+  const [lastAlert, setLastAlert] = useState(null);
 
   useEffect(() => {
-    // 1. Function to Fetch data from Flask server
-    const fetchIncidents = () => {
-      fetch('http://127.0.0.1:5001/api/incidents')
-        .then(res => res.json())
-        .then(data => setIncidents(data))
-        .catch(err => console.error("Is the Python server running?", err));
-    };
-
-    // Initial fetch
-    fetchIncidents();
-
-    // Set up polling (check for new AI detections every 3 seconds)
-    const interval = setInterval(fetchIncidents, 3000);
-
-    // 2. Setup Webcam Stream
+    // 1. Setup Webcam Stream with better constraints
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
+      navigator.mediaDevices.getUserMedia({ 
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        } 
+      })
         .then((stream) => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play(); // Explicitly start playback
           }
         })
         .catch((err) => {
           console.error("Webcam access error:", err);
+          alert("Camera access denied or not available. Please check browser permissions.");
         });
     }
 
-    // Cleanup interval on component unmount
-    return () => clearInterval(interval);
+    // 2. Poll for status updates from Python backend
+    const checkStatus = () => {
+      fetch('http://127.0.0.1:5001/api/status')
+        .then(res => res.json())
+        .then(data => {
+          if (data.status) {
+            setStatus(data.status);
+          }
+          if (data.lastAlert) {
+            setLastAlert(data.lastAlert);
+          }
+        })
+        .catch(err => console.error("Backend connection error:", err));
+    };
+
+    // Initial check
+    checkStatus();
+
+    // Poll every 2 seconds
+    const interval = setInterval(checkStatus, 2000);
+
+    // Cleanup
+    return () => {
+      clearInterval(interval);
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
-  return (
-    <div className="grid grid-cols-12 gap-10 animate-in slide-in-from-bottom-4 duration-700 font-sans">
-      {/* Left Column: Video & Stats */}
-      <div className="col-span-12 lg:col-span-8">
-        <header className="mb-8">
-          <h1 className="text-5xl font-black italic mb-2 tracking-tighter">Live Camera.</h1>
-          <p className="text-gray-400 font-semibold">Footage from real time.</p>
-        </header>
+  // Determine status color
+  const getStatusColor = () => {
+    switch(status) {
+      case 'WEAPON DETECTED':
+      case 'THREAT DETECTED':
+        return 'bg-red-500';
+      case 'SUSPICIOUS':
+        return 'bg-orange-500';
+      case 'PERSON DOWN':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-green-500';
+    }
+  };
 
-        {/* Video Box with Webcam Stream */}
-        <div className="relative aspect-video bg-black rounded-[2.5rem] shadow-inner mb-10 overflow-hidden flex items-center justify-center border border-gray-100">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted
-            className="w-full h-full object-cover scale-x-[-1]" 
-          />
-          <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live Feed</span>
-          </div>
+  return (
+    <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-4 duration-700 font-sans">
+      <header className="mb-8">
+        <h1 className="text-5xl font-black italic mb-2 tracking-tighter">Live Camera.</h1>
+        <p className="text-gray-400 font-semibold">Real-time threat detection system</p>
+      </header>
+
+      {/* Main Video Feed */}
+      <div className="relative aspect-video bg-black rounded-[2.5rem] shadow-2xl mb-8 overflow-hidden flex items-center justify-center border border-gray-100">
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          muted
+          className="w-full h-full object-cover scale-x-[-1]" 
+        />
+        
+        {/* Live Indicator */}
+        <div className="absolute top-6 left-6 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <span className="text-white text-[10px] font-bold uppercase tracking-wider">Live Feed</span>
         </div>
 
-        {/* Bottom Analysis Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-gray-100 rounded-4xl p-8 min-h-45 bg-white">
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 size={18} className="text-gray-400" />
-              <h3 className="font-bold">Crime Type Analysis</h3>
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium">Real-time breakdown of detected behaviors.</p>
-          </div>
-          <div className="border border-gray-100 rounded-4xl p-8 min-h-45 bg-white">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity size={18} className="text-gray-400" />
-              <h3 className="font-bold">Confidence For Crime</h3>
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium">AI model certainty for the current detection.</p>
-          </div>
+        {/* Status Badge */}
+        <div className={`absolute top-6 right-6 flex items-center gap-2 ${getStatusColor()} backdrop-blur-md px-4 py-2 rounded-full border border-white/20`}>
+          <ShieldAlert size={16} className="text-white" />
+          <span className="text-white text-xs font-bold uppercase tracking-wider">{status}</span>
         </div>
       </div>
 
-      {/* Right Column: Sidebar */}
-      <div className="col-span-12 lg:col-span-4 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] p-8 flex flex-col h-[calc(100vh-160px)] self-start">
-        <h2 className="text-3xl font-black italic mb-1 tracking-tighter">
-          Incident <span className="text-gray-400">Dashboard.</span>
-        </h2>
-        <p className="text-[10px] text-gray-400 uppercase font-bold mb-8 tracking-widest">Real-Time Statistics</p>
-        
-        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-          {incidents.length > 0 ? (
-            incidents.map((incident) => (
-              <IncidentCard 
-                key={incident.id}
-                title={incident.title} 
-                time={incident.time} 
-                description={incident.description}
-                color={incident.color}
-              />
-            ))
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-gray-300 text-sm italic font-medium">Waiting for system alerts...</p>
+      {/* Alert Panel */}
+      {lastAlert && status !== 'SECURE' && (
+        <div className="bg-white border-2 border-red-200 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shrink-0">
+              <ShieldAlert className="text-white" size={24} />
             </div>
-          )}
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-red-600 mb-1">{lastAlert.event_type}</h3>
+              <p className="text-gray-600 mb-2">{lastAlert.description}</p>
+              <div className="flex gap-4 text-sm text-gray-500">
+                <span>Time: {new Date(lastAlert.timestamp).toLocaleTimeString()}</span>
+                <span>•</span>
+                <span>Confidence: {lastAlert.confidence_score}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* System Info */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <h4 className="font-bold text-gray-800 mb-1">Detection Mode</h4>
+          <p className="text-sm text-gray-500">Continuous monitoring active</p>
+        </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <h4 className="font-bold text-gray-800 mb-1">AI Model</h4>
+          <p className="text-sm text-gray-500">YOLOv8 + MediaPipe + EyePop</p>
+        </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <h4 className="font-bold text-gray-800 mb-1">Response Status</h4>
+          <p className="text-sm text-gray-500">Automated alerts enabled</p>
         </div>
       </div>
     </div>
@@ -185,21 +197,19 @@ export default function App() {
         </div>
         <div className="hidden md:flex gap-10 text-[13px] font-bold uppercase tracking-tight">
           <button 
-            onClick={() => setCurrentPage('dashboard')} 
-            className={`transition-all ${currentPage === 'dashboard' ? 'text-black border-b-2 border-black' : 'text-gray-300 hover:text-black'}`}
+            onClick={() => setCurrentPage('camera')} 
+            className={`transition-all ${currentPage === 'camera' ? 'text-black border-b-2 border-black' : 'text-gray-300 hover:text-black'}`}
           >
             Real-Time Analysis
           </button>
-          <button className="text-gray-300 hover:text-black transition-colors">Upload</button>
-          <button className="text-gray-300 hover:text-black transition-colors">Statistics</button>
         </div>
       </nav>
 
       {/* CONTENT SWITCHER */}
       {currentPage === 'home' ? (
-        <HomePage onStart={() => setCurrentPage('dashboard')} />
+        <HomePage onStart={() => setCurrentPage('camera')} />
       ) : (
-        <DashboardPage />
+        <CameraPage />
       )}
     </div>
   );
