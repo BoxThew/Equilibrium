@@ -26,5 +26,61 @@
         "description": "Lethal threat identified",
         "confidence_score": 98,
         "evidence_file": "evidence2026-02-01_07-16-45.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:07:54.192322",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-07-54.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:25:12.577453",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-25-12.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:34:00.774820",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-34-00.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:34:17.965624",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-34-17.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:43:58.685417",
+        "event_type": "SUSPICIOUS",
+        "description": "Aggressive Stance",
+        "confidence_score": 75,
+        "evidence_file": "evidence2026-02-01_11-43-58.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:44:17.932674",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-44-17.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:49:54.980871",
+        "event_type": "THREAT DETECTED",
+        "description": "Active Fighting Detected",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-49-54.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:54:47.503897",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence2026-02-01_11-54-47.jpg"
     }
 ]

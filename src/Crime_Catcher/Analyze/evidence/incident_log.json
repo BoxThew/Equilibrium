@@ -1,0 +1,23 @@
+[
+    {
+        "timestamp": "2026-02-01T11:38:06.630321",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence_2026-02-01_11-38-06.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:40:52.005860",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence_2026-02-01_11-40-52.jpg"
+    },
+    {
+        "timestamp": "2026-02-01T11:41:23.349367",
+        "event_type": "WEAPON DETECTED",
+        "description": "Lethal threat identified",
+        "confidence_score": 98,
+        "evidence_file": "evidence_2026-02-01_11-41-23.jpg"
+    }
+]
